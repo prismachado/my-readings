@@ -3,12 +3,14 @@ import {
   Content,
   Header,
   Title,
-  Menu,
-  LinkMenu,
   Banner,
+  LinkMenu,
+  Menu,
 } from "./styles";
 
 import ShelfBooks from "../components/shelf";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import FetchBooks from "../fetchBooks";
 
 const Home = () => {
   return (
@@ -16,13 +18,22 @@ const Home = () => {
       <Content>
         <Header>
           <Title>Minhas Leituras</Title>
-          <Menu>
-            <LinkMenu>Home</LinkMenu>
-            <LinkMenu>Buscar</LinkMenu>
-          </Menu>
         </Header>
         <Banner />
-        <ShelfBooks />
+        <Router>
+          <Menu>
+            <LinkMenu to="/">Home</LinkMenu>
+            <LinkMenu to="/fetchbooks">Buscar</LinkMenu>
+          </Menu>
+          <Switch>
+            <Route exact path="/">
+              <ShelfBooks />
+            </Route>
+            <Route exact path="/fetchbooks">
+              <FetchBooks />
+            </Route>
+          </Switch>
+        </Router>
       </Content>
     </Container>
   );

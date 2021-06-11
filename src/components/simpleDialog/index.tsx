@@ -1,42 +1,42 @@
-import React from "react";
-
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import DialogTitle from "@material-ui/core/DialogTitle";
 import Dialog from "@material-ui/core/Dialog";
 
-const shelfs = ["Lendo", "Quero ler", "Lidos"];
-
 export interface SimpleDialogProps {
   open: boolean;
-  shelfOrigin: string;
-  bookIndex: number;
-  onClose: (shelfOrigin: string, shelfMove: string, bookIndex: number) => void;
+  onClose: (shelfMove: string) => void;
 }
 
 const SimpleDialog = (props: SimpleDialogProps) => {
-  const { onClose, shelfOrigin, bookIndex, open } = props;
+  const shelfs = [
+    { key: "currentlyReading", title: "Lendo" },
+    { key: "wantToRead", title: "Quero ler" },
+    { key: "read", title: "Lidos" },
+  ];
+
+  const { onClose, open } = props;
 
   const handleClose = () => {
-    onClose(shelfOrigin, "", bookIndex);
+    onClose("");
   };
 
   const handleListItemClick = (shelfMove: string) => {
-    onClose(shelfOrigin, shelfMove, bookIndex);
+    onClose(shelfMove);
   };
 
   return (
     <Dialog onClose={handleClose} open={open}>
       <DialogTitle id="simple-dialog-title">Mover para:</DialogTitle>
       <List>
-        {shelfs.map((shelf) => (
+        {shelfs.map((shelf, index) => (
           <ListItem
             button
-            onClick={() => handleListItemClick(shelf)}
-            key={shelf}
+            onClick={() => handleListItemClick(shelf.key)}
+            key={index}
           >
-            <ListItemText primary={shelf} />
+            <ListItemText primary={shelf.title} />
           </ListItem>
         ))}
       </List>

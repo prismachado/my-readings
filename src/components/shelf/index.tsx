@@ -10,92 +10,65 @@ import {
 } from "./styles";
 
 import SystemUpdateAltIcon from "@material-ui/icons/SystemUpdateAlt";
-
 import { CardActions } from "@material-ui/core";
-import { read, readings, wantToRead } from "../../components/mockData";
-import SimpleDialog from "./components/simpleDialog";
+import SimpleDialog from "../simpleDialog";
+import { getAll, update } from "../../api/BooksAPI";
 
-interface BookParams {
+export interface Books {
   title: string;
-  image: string;
+  shelf: string;
+  imageLinks: Image;
+}
+export interface Image {
+  thumbnail: string;
 }
 
 const ShelfBooks = () => {
-  const [bookRead, setBookRead] = useState(read);
-  const [bookWantToRead, setBookWantToRead] = useState(wantToRead);
-  const [bookReadings, setBookReadings] = useState(readings);
+  const [bookRead, setBookRead] = useState([]);
+  const [bookWantToRead, setBookWantToRead] = useState([]);
+  const [bookReadings, setBookReadings] = useState([]);
   const [open, setOpen] = useState(false);
-  const [bookAdd, setBookAdd] = useState({} as BookParams);
-  const [bookIndex, setBookIndex] = useState("");
-  const [shelfOrigin, setShelfOrigin] = useState("");
+  const [bookMove, setBookMove] = useState<Books>();
   const [shelfMove, setShelfMove] = useState("");
+
+  const getbooks = async () => {
+    if (shelfMove !== "") {
+      await update(bookMove, shelfMove);
+    }
+
+    const booksApi = await getAll();
+
+    setBookReadings(
+      booksApi.filter((book: Books) => book.shelf === "currentlyReading")
+    );
+
+    setBookWantToRead(
+      booksApi.filter((book: Books) => book.shelf === "wantToRead")
+    );
+
+    setBookRead(booksApi.filter((book: Books) => book.shelf === "read"));
+  };
+
+  useEffect(() => {
+    getbooks();
+  }, []);
 
   useEffect(() => {
     if (shelfMove !== "") {
-      switch (shelfMove) {
-        case "Lendo":
-          bookReadings.push(bookAdd);
-          setBookReadings(bookReadings);
-          break;
-
-        case "Quero ler":
-          bookWantToRead.push(bookAdd);
-          setBookWantToRead(bookWantToRead);
-          break;
-
-        case "Lidos":
-          bookRead.push(bookAdd);
-          setBookRead(bookRead);
-          break;
-
-        default:
-          break;
-      }
-
-      setBookIndex("");
-      setShelfOrigin("");
-      setShelfMove("");
-      setBookAdd({} as BookParams);
+      getbooks();
     }
   }, [shelfMove]);
 
-  const removeBookFromShelf = (origin: string, index: number) => {
-    switch (origin) {
-      case "Lendo":
-        setBookAdd(bookReadings[index]);
-        bookReadings.splice(index, 1);
-        setBookReadings(bookReadings);
-        break;
-
-      case "Quero ler":
-        setBookAdd(bookWantToRead[index]);
-        bookWantToRead.splice(index, 1);
-        setBookWantToRead(bookWantToRead);
-        break;
-
-      case "Lidos":
-        setBookAdd(bookRead[index]);
-        bookRead.splice(index, 1);
-        setBookRead(bookRead);
-        break;
-
-      default:
-        break;
-    }
-  };
-
-  const handleClickOpen = (index: number, shelfOrigin: string) => {
+  const handleClickOpen = (bookMove: Books) => {
     setOpen(true);
-    setBookIndex(String(index));
-    setShelfOrigin(shelfOrigin);
+    setBookMove(bookMove);
   };
 
-  const handleClose = (origin: string, move: string, index: number) => {
+  const handleClose = (move: string) => {
     setOpen(false);
 
     if (move !== "") {
       setShelfMove(move);
-      removeBookFromShelf(origin, index);
     }
   };
 
@@ -105,9 +78,9 @@ const ShelfBooks = () => {
         <ShelfTitle>Lendo</ShelfTitle>
       </Shelf>
       <CardContainer key={"readings" + bookReadings.length}>
-        {bookReadings.map((book, index) => (
+        {bookReadings.map((book: Books, index) => (
           <Book key={index}>
-            <BookMedia src={book.image} />
+            <BookMedia src={book.imageLinks.thumbnail} />
             <BookContent>
               <BookTitle>{book.title}</BookTitle>
             </BookContent>
@@ -116,7 +89,7 @@ const ShelfBooks = () => {
                 fontSize="small"
                 color="primary"
                 onClick={() => {
-                  handleClickOpen(index, "Lendo");
+                  handleClickOpen(book);
                 }}
               />
             </CardActions>
@@ -128,9 +101,9 @@ const ShelfBooks = () => {
         <ShelfTitle>Quero ler</ShelfTitle>
       </Shelf>
       <CardContainer key={"want" + bookWantToRead.length}>
-        {bookWantToRead.map((book, index) => (
+        {bookWantToRead.map((book: Books, index) => (
           <Book key={index}>
-            <BookMedia src={book.image} />
+            <BookMedia src={book.imageLinks.thumbnail} />
             <BookContent>
               <BookTitle>{book.title}</BookTitle>
             </BookContent>
@@ -139,7 +112,7 @@ const ShelfBooks = () => {
                 fontSize="small"
                 color="primary"
                 onClick={() => {
-                  handleClickOpen(index, "Quero ler");
+                  handleClickOpen(book);
                 }}
               />
             </CardActions>
@@ -151,9 +124,9 @@ const ShelfBooks = () => {
         <ShelfTitle>Lidos</ShelfTitle>
       </Shelf>
       <CardContainer key={"read" + bookRead.length}>
-        {bookRead.map((book, index) => (
+        {bookRead.map((book: Books, index) => (
           <Book key={index}>
-            <BookMedia src={book.image} />
+            <BookMedia src={book.imageLinks.thumbnail} />
             <BookContent>
               <BookTitle>{book.title}</BookTitle>
             </BookContent>
@@ -162,19 +135,14 @@ const ShelfBooks = () => {
                 fontSize="small"
                 color="primary"
                 onClick={() => {
-                  handleClickOpen(index, "Lidos");
+                  handleClickOpen(book);
                 }}
               />
             </CardActions>
           </Book>
         ))}
       </CardContainer>
-      <SimpleDialog
-        shelfOrigin={shelfOrigin}
-        bookIndex={Number(bookIndex)}
-        open={open}
-        onClose={handleClose}
-      />
+      <SimpleDialog open={open} onClose={handleClose} />
     </>
   );
 };
